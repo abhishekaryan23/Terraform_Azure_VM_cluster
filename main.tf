@@ -1,7 +1,11 @@
+# Creating the resource group
+
 resource "azurerm_resource_group" "vm-cluster-test" {
  name     = "vm-cluster-test"
  location = var.location
 }
+
+# Creating Virtual Network for the VMs
 
 resource "azurerm_virtual_network" "vn-4-clustertest" {
  name                = "vn-4-clustertest"
@@ -10,6 +14,8 @@ resource "azurerm_virtual_network" "vn-4-clustertest" {
  resource_group_name = azurerm_resource_group.vm-cluster-test.name
 }
 
+# Creating subnets inside the Virtaul network
+
 resource "azurerm_subnet" "subnet4clustertest" {
  name                 = "acctsub"
  resource_group_name  = azurerm_resource_group.vm-cluster-test.name
@@ -17,12 +23,16 @@ resource "azurerm_subnet" "subnet4clustertest" {
  address_prefix      = "10.0.2.0/24"
 }
 
+# Crating Public IP for VMs
+
 resource "azurerm_public_ip" "public-ip-4-clustertest" {
  name                         = "publicIPForLB"
  location                     = azurerm_resource_group.vm-cluster-test.location
  resource_group_name          = azurerm_resource_group.vm-cluster-test.name
  allocation_method            = "Static"
 }
+
+# Creating Loadbalancer
 
 resource "azurerm_lb" "lb-4-clustertest" {
  name                = "loadBalancer"
@@ -35,11 +45,15 @@ resource "azurerm_lb" "lb-4-clustertest" {
  }
 }
 
+# Creating Backend addresspool for loadbalancer
+
 resource "azurerm_lb_backend_address_pool" "lb-bknd-pool" {
  resource_group_name = azurerm_resource_group.vm-cluster-test.name
  loadbalancer_id     = azurerm_lb.lb-4-clustertest.id
  name                = "BackEndAddressPool"
 }
+
+# Creating network interface Configuration
 
 resource "azurerm_network_interface" "netintfs" {
  count               = 2
@@ -54,6 +68,8 @@ resource "azurerm_network_interface" "netintfs" {
  }
 }
 
+# Creating disks for VM.
+
 resource "azurerm_managed_disk" "md4clustertest" {
  count                = 2
  name                 = "datadisk_existing_${count.index}"
@@ -64,6 +80,8 @@ resource "azurerm_managed_disk" "md4clustertest" {
  disk_size_gb         = "50"
 }
 
+# Creating Availabiliy set
+
 resource "azurerm_availability_set" "avset-4-clustertest" {
  name                         = "avset"
  location                     = azurerm_resource_group.vm-cluster-test.location
@@ -72,6 +90,8 @@ resource "azurerm_availability_set" "avset-4-clustertest" {
  platform_update_domain_count = 2
  managed                      = true
 }
+
+# Creating the VMs
 
 resource "azurerm_virtual_machine" "vms-4-clustertest" {
  count                 = 2
